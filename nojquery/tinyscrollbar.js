@@ -20,13 +20,13 @@
     var pluginName = "tinyscrollbar"
     ,   defaults   =
         {
-            axis           : 'y'           // vertical or horizontal scrollbar? ( x || y ).
-        ,   wheel          : true          // enable or disable the mousewheel;
-        ,   wheelSpeed     : 40            // how many pixels must the mouswheel scroll at a time.
-        ,   wheelLock      : true          // return mouswheel to browser if there is no more content.
-        ,   scrollInvert   : false         // Inverts the direction of scrolling
-        ,   trackSize      : false         // set the size of the scrollbar to auto or a fixed number.
-        ,   thumbSize      : false         // set the size of the thumb to auto or a fixed number.
+            axis         : 'y'    // Vertical or horizontal scrollbar? ( x || y ).
+        ,   wheel        : true   // Enable or disable the mousewheel;
+        ,   wheelSpeed   : 40     // How many pixels must the mouswheel scroll at a time.
+        ,   wheelLock    : true   // Lock default scrolling window when there is no more content.
+        ,   scrollInvert : false  // Enable invert style scrolling
+        ,   trackSize    : false  // Set the size of the scrollbar to auto or a fixed number.
+        ,   thumbSize    : false  // Set the size of the thumb to auto or a fixed number.
         }
     ;
 
@@ -46,7 +46,9 @@
 
         ,   mousePosition  = 0
         ,   isHorizontal   = this.options.axis === 'x'
-        ,   hasTouchEvents = "ontouchstart" in document.documentElement
+        ,   hasTouchEvents = ("ontouchstart" in document.documentElement)
+        ,   wheelEvent     = ("onwheel" in document || document.documentMode >= 9) ? "wheel" :
+                             (document.onmousewheel !== undefined ? "mousewheel" : "DOMMouseScroll")
 
         ,   sizeLabel = isHorizontal ? "width" : "height"
         ,   posiLabel = isHorizontal ? "left" : "top"
@@ -81,6 +83,7 @@
             this.trackSize    = this.options.trackSize || this.viewportSize;
             this.thumbSize    = Math.min(this.trackSize, Math.max(0, (this.options.thumbSize || (this.trackSize * this.contentRatio))));
             this.trackRatio   = this.options.thumbSize ? (this.contentSize - this.viewportSize) / (this.trackSize - this.thumbSize) : (this.contentSize / this.trackSize);
+            mousePosition     = $track.offsetTop;
 
             var scrcls = $scrollbar.className;
             $scrollbar.className = this.contentRatio >= 1 ? scrcls + " disable" : scrcls.replace(" disable", "");
@@ -130,10 +133,14 @@
                 $track.onmousedown = drag;
             }
 
+            window.addEventListener("resize", function()
+            {
+               self.update("relative");
+            }, true);
+
             if(self.options.wheel && window.addEventListener)
             {
-                $container.addEventListener("DOMMouseScroll", wheel, false );
-                $container.addEventListener("mousewheel", wheel, false );
+                $container.addEventListener(wheelEvent, wheel, false );
             }
             else if(self.options.wheel)
             {
@@ -167,8 +174,9 @@
         {
             if(self.contentRatio < 1)
             {
-                var eventObject     = event || window.event
-                ,   wheelSpeedDelta = eventObject.wheelDelta ? eventObject.wheelDelta / 120 : -eventObject.detail / 3
+                var evntObj         = event || window.event
+                ,   deltaDir        = "delta" + self.options.axis.toUpperCase()
+                ,   wheelSpeedDelta = -(evntObj[deltaDir] || evntObj.detail || (-1 / 3 * evntObj.wheelDelta)) / 40
                 ;
 
                 self.contentPosition -= wheelSpeedDelta * self.options.wheelSpeed;
@@ -181,7 +189,7 @@
 
                 if(self.options.wheelLock || (self.contentPosition !== (self.contentSize - self.viewportSize) && self.contentPosition !== 0))
                 {
-                    eventObject.preventDefault();
+                    evntObj.preventDefault();
                 }
             }
         }

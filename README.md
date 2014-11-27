@@ -3,7 +3,7 @@ jquery-tinyscrollbar
 
 Tiny Scrollbar is a nice and elegant way to enable the scrolling of content on mobile and desktop devices. Its designed to be a dynamic lightweight utility. Furthermore it gives a User Interface Designer a powerful way of enhancing the Ui (user interface) of a website.
 
-It comes in 2 flavors as a vanilla Javascript microlib and a jQuery plugin. The jQuery plugin does not need any other external libaries like jQuery Ui.
+It comes in 2 flavours as a vanilla Javascript microlib and a jQuery plugin. The jQuery plugin does not need any other external libraries like jQuery Ui.
 
 Browser support differs between the jQuery plugin and the plain Javascript microlib. Specifically, the plain Javascript microlib does not support legacy browsers such as IE6-8. Use the jQuery plugin release if support for those browsers is required.
 
@@ -21,10 +21,15 @@ Browser support differs between the jQuery plugin and the plain Javascript micro
 * Examples can be seen on this page, by downloading the zip or here
 * Lightweight
 
-#### License
+#### Examples
 
-Tinyscrollbar is a free script its licensed under the MIT license.
+The examples below are all for the jQuery Plugin. If you need some more (advanced) [examples you can find them here](http://baijs.com/tinyscrollbar/examples/). You can also find a example for the plain javascript library there.
 
 #### Source
 
 The latest source is available on [GitHub](https://github.com/wieringen/tinyscrollbar).
+
+#### License
+
+Tinyscrollbar is a free script its licensed under the MIT license.
+

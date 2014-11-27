@@ -2,30 +2,31 @@
 {
     if (typeof define === 'function' && define.amd)
     {
-        // AMD. Register as an anonymous module.
         define(['jquery'], factory);
-    } else if (typeof exports === 'object')
+    }
+    else if (typeof exports === 'object')
     {
-        // Node/CommonJS
         factory(require('jquery'));
-    } else
+    }
+    else
     {
-        // Browser globals
         factory(jQuery);
     }
-}(function ($)
+}
+(function ($)
 {
+    "use strict";
 
     var pluginName = "tinyscrollbar"
     ,   defaults   =
         {
-            axis           : 'y'           // vertical or horizontal scrollbar? ( x || y ).
-        ,   wheel          : true          // enable or disable the mousewheel;
-        ,   wheelSpeed     : 40            // how many pixels must the mouswheel scroll at a time.
-        ,   wheelLock      : true          // return mouswheel to browser if there is no more content.
-        ,   scrollInvert   : false         // Enable invert style scrolling
-        ,   trackSize      : false         // set the size of the scrollbar to auto or a fixed number.
-        ,   thumbSize      : false         // set the size of the thumb to auto or a fixed number.
+            axis         : 'y'    // Vertical or horizontal scrollbar? ( x || y ).
+        ,   wheel        : true   // Enable or disable the mousewheel;
+        ,   wheelSpeed   : 40     // How many pixels must the mouswheel scroll at a time.
+        ,   wheelLock    : true   // Lock default scrolling window when there is no more content.
+        ,   scrollInvert : false  // Enable invert style scrolling
+        ,   trackSize    : false  // Set the size of the scrollbar to auto or a fixed number.
+        ,   thumbSize    : false  // Set the size of the thumb to auto or a fixed number
         }
     ;
 
@@ -42,10 +43,12 @@
         ,   $track      = $scrollbar.find(".track")
         ,   $thumb      = $scrollbar.find(".thumb")
 
-        ,   mousePosition   = 0
+        ,   mousePosition  = 0
 
         ,   isHorizontal   = this.options.axis === 'x'
-        ,   hasTouchEvents = "ontouchstart" in document.documentElement
+        ,   hasTouchEvents = ("ontouchstart" in document.documentElement)
+        ,   wheelEvent     = ("onwheel" in document || document.documentMode >= 9) ? "wheel" :
+                             (document.onmousewheel !== undefined ? "mousewheel" : "DOMMouseScroll")
 
         ,   sizeLabel = isHorizontal ? "width" : "height"
         ,   posiLabel = isHorizontal ? "left" : "top"
@@ -77,9 +80,9 @@
             this.trackSize    = this.options.trackSize || this.viewportSize;
             this.thumbSize    = Math.min(this.trackSize, Math.max(0, (this.options.thumbSize || (this.trackSize * this.contentRatio))));
             this.trackRatio   = this.options.thumbSize ? (this.contentSize - this.viewportSize) / (this.trackSize - this.thumbSize) : (this.contentSize / this.trackSize);
+            mousePosition     = $track.offset().top;
 
             $scrollbar.toggleClass("disable", this.contentRatio >= 1);
-
             switch (scrollTo)
             {
                 case "bottom":
@@ -87,7 +90,7 @@
                     break;
 
                 case "relative":
-                    this.contentPosition = Math.min(this.contentSize - this.viewportSize, Math.max(0, this.contentPosition));
+                    this.contentPosition = Math.min(Math.max(this.contentSize - this.viewportSize, 0), Math.max(0, this.contentPosition));
                     break;
 
                 default:
@@ -95,6 +98,8 @@
             }
 
             setSize();
+
+            return self;
         };
 
         function setSize()
@@ -114,8 +119,9 @@
                 {
                     if(1 === event.touches.length)
                     {
-                        start(event.touches[0]);
                         event.stopPropagation();
+
+                        start(event.touches[0]);
                     }
                 };
             }
@@ -125,10 +131,14 @@
                 $track.bind("mousedown", drag);
             }
 
+            $(window).resize(function()
+            {
+                self.update("relative");
+            });
+
             if(self.options.wheel && window.addEventListener)
             {
-                $container[0].addEventListener("DOMMouseScroll", wheel, false );
-                $container[0].addEventListener("mousewheel", wheel, false );
+                $container[0].addEventListener(wheelEvent, wheel, false );
             }
             else if(self.options.wheel)
             {
@@ -164,8 +174,9 @@
         {
             if(self.contentRatio < 1)
             {
-                var eventObject     = event || window.event
-                ,   wheelSpeedDelta = eventObject.wheelDelta ? eventObject.wheelDelta / 120 : -eventObject.detail / 3
+                var evntObj         = event || window.event
+                ,   deltaDir        = "delta" + self.options.axis.toUpperCase()
+                ,   wheelSpeedDelta = -(evntObj[deltaDir] || evntObj.detail || (-1 / 3 * evntObj.wheelDelta)) / 40
                 ;
 
                 self.contentPosition -= wheelSpeedDelta * self.options.wheelSpeed;
@@ -178,8 +189,8 @@
 
                 if(self.options.wheelLock || (self.contentPosition !== (self.contentSize - self.viewportSize) && self.contentPosition !== 0))
                 {
-                    eventObject = $.event.fix(eventObject);
-                    eventObject.preventDefault();
+                    evntObj = $.event.fix(evntObj);
+                    evntObj.preventDefault();
                 }
             }
         }
